@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 "use_strict"
 
-console.log('logging...')
-console.error('erroring...')
+printHelp()
 
 //************************************
 
-const helpText = `
-  script usage:
-    demoScript --help
-`
+function printHelp() {
 
-const printHelp = () => {
+  const helpText = `
+    script usage:
+      demoScript --help
+
+    --help                print this help
+  `
+
   console.log(helpText)
 }
