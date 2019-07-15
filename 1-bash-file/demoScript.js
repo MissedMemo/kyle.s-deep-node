@@ -22,9 +22,20 @@ else {
 //************************************
 
 function processFile( pathAndFile ) {
+  /*
   const buffer = fs.readFileSync(pathAndFile)
   console.log(buffer)
   process.stdout.write(buffer)
+  */
+
+  fs.readFile( pathAndFile, (err,data) => {
+    if(err) {
+      console.log( err.toString() )
+    }
+    else {
+      process.stdout.write(data)
+    }
+  })
 }
 
 function error(message, showHelp) {
