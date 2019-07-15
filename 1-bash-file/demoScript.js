@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 "use_strict"
 
+const path = require('path')
+const fs = require('fs')
+
 const args = require("minimist")(process.argv.slice(2), {
   boolean: ["help"],
   string: ["file"]
@@ -10,13 +13,19 @@ if ( args.help ) {
   printHelp()
 }
 else if ( args.file ) {
-  console.log(args.file)
+  processFile( path.resolve(args.file) )
 }
 else {
   error("incorrect usage!", true )
 }
 
 //************************************
+
+function processFile( pathAndFile ) {
+  const buffer = fs.readFileSync(pathAndFile)
+  console.log(buffer)
+  process.stdout.write(buffer)
+}
 
 function error(message, showHelp) {
   console.error( `\nERROR: ${message}` )
