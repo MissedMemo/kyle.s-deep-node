@@ -1,21 +1,42 @@
 #!/usr/bin/env node
 "use_strict"
 
-const args = require("minimist")(process.argv.slice(2))
-console.log( args )
+const args = require("minimist")(process.argv.slice(2), {
+  boolean: ["help"],
+  string: ["file"]
+})
 
-printHelp()
+if ( args.help ) {
+  printHelp()
+}
+else if ( args.file ) {
+  console.log(args.file)
+}
+else {
+  error("incorrect usage!", true )
+}
 
 //************************************
+
+function error(message, showHelp) {
+  console.error( `\nERROR: ${message}` )
+  if ( showHelp ) {
+    printHelp()
+  }
+}
 
 function printHelp() {
 
   const helpText = `
-    script usage:
-      demoScript --help
+    Usage:
 
-    --help                print this help
+      ./demoScript --file={FILENAME}
+    
+    Options:
+      
+      --help                print this help
+      --file={FILENAME}     process the file
   `
 
-  console.log(helpText)
+  console.log('\n' + helpText)
 }
