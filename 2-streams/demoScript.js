@@ -5,15 +5,16 @@ const path = require('path')
 const fs = require('fs')
 const util = require('util')
 const { Transform } = require('stream')
+const zlib = require("zlib")
 
 const args = require("minimist")(process.argv.slice(2), {
-  boolean: ["help", "in"],
+  boolean: ["help", "in", "out", "compress"],
   string: ["file"]
 })
 
 const basePath = path.resolve( process.env.BASE_PATH || __dirname )
 
-const outputFile = path.join( basePath, "output.txt" )
+let outputFile = path.join( basePath, "output.txt" )
 
 if ( args.help ) {
   printHelp()
@@ -45,6 +46,12 @@ function processData( inputStream ) {
 
   outputStream = outputStream.pipe( upperStream )
 
+  if ( args.compress ) {
+    const gzipStream = zlib.createGzip()
+    outputStream = outputStream.pipe( gzipStream )
+    outputFile = `${outputFile}.gz`
+  }
+
   const targetStream = args.out ? process.stdout : fs.createWriteStream( outputFile )
   outputStream.pipe( targetStream )
 }
@@ -72,6 +79,7 @@ function printHelp() {
       --file={FILENAME}     process the file
       --in, -               process from stdin
       --out                 write to stdout (not file)
+      --compress            gzip output
 
     Env:
       
