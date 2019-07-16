@@ -13,6 +13,8 @@ const args = require("minimist")(process.argv.slice(2), {
 
 const basePath = path.resolve( process.env.BASE_PATH || __dirname )
 
+const outputFile = path.join( basePath, "output.txt" )
+
 if ( args.help ) {
   printHelp()
 }
@@ -43,7 +45,7 @@ function processData( inputStream ) {
 
   outputStream = outputStream.pipe( upperStream )
 
-  const targetStream = process.stdout
+  const targetStream = args.out ? process.stdout : fs.createWriteStream( outputFile )
   outputStream.pipe( targetStream )
 }
 
@@ -69,6 +71,7 @@ function printHelp() {
       --help                print this help
       --file={FILENAME}     process the file
       --in, -               process from stdin
+      --out                 write to stdout (not file)
 
     Env:
       
