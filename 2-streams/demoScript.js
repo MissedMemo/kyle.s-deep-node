@@ -3,8 +3,8 @@
 
 const path = require('path')
 const fs = require('fs')
-const getStdIn = require('get-stdin')
 const util = require('util')
+const { Transform } = require('stream')
 
 const args = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "in"],
@@ -17,19 +17,12 @@ if ( args.help ) {
   printHelp()
 }
 else if (args.in || args._.includes('-')) {
-  getStdIn().then( processData ).catch( showError )
+  processData( process.stdin )
 }
 else if ( args.file ) {
-  const pathAndFile = path.join( basePath, args.file )
-
-  fs.readFile( pathAndFile, (err,data) => {
-    if(err) {
-      console.log( err.toString() )
-    }
-    else {
-      processData(data)
-    }
-  })
+  
+  const stream = fs.createReadStream( path.join( basePath, args.file ) )
+  processData( stream )
 }
 else {
   showError("incorrect usage!", true )
@@ -37,9 +30,21 @@ else {
 
 //************************************
 
-function processData( data ) {
-  const upCased = data.toString().toUpperCase()
-  process.stdout.write(upCased)
+function processData( inputStream ) {
+
+  let outputStream = inputStream
+
+  const upperStream = new Transform({
+    transform( chunk, enc, cb ) {
+      this.push( chunk.toString().toUpperCase() )
+      cb()
+    }
+  })
+
+  outputStream = outputStream.pipe( upperStream )
+
+  const targetStream = process.stdout
+  outputStream.pipe( targetStream )
 }
 
 function showError(message, showHelp) {
