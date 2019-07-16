@@ -37,6 +37,11 @@ function processData( inputStream ) {
 
   let outputStream = inputStream
 
+  if ( args.decompress ) {
+    const gunzipStream = zlib.Gunzip()
+    outputStream = outputStream.pipe( gunzipStream )
+  }
+
   const upperStream = new Transform({
     transform( chunk, enc, cb ) {
       this.push( chunk.toString().toUpperCase() )
@@ -80,6 +85,7 @@ function printHelp() {
       --in, -               process from stdin
       --out                 write to stdout (not file)
       --compress            gzip output
+      --decompress          unzip the input
 
     Env:
       
