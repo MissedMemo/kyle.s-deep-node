@@ -12,6 +12,14 @@ const args = require("minimist")(process.argv.slice(2), {
   string: ["file"]
 })
 
+const streamComplete = stream => {
+  return new Promise( res => {
+    stream.on( "end", () => {
+      res()
+    })
+  })
+}
+
 const basePath = path.resolve( process.env.BASE_PATH || __dirname )
 
 let outputFile = path.join( basePath, "output.txt" )
@@ -20,12 +28,13 @@ if ( args.help ) {
   printHelp()
 }
 else if (args.in || args._.includes('-')) {
-  processData( process.stdin )
+  processData( process.stdin ).catch( showError )
 }
 else if ( args.file ) {
-  
   const stream = fs.createReadStream( path.join( basePath, args.file ) )
-  processData( stream )
+  processData( stream ).then( () => {
+    console.log('COMPLETE!')
+  }).catch( showError )
 }
 else {
   showError("incorrect usage!", true )
@@ -33,7 +42,7 @@ else {
 
 //************************************
 
-function processData( inputStream ) {
+async function processData( inputStream ) {
 
   let outputStream = inputStream
 
@@ -59,6 +68,8 @@ function processData( inputStream ) {
 
   const targetStream = args.out ? process.stdout : fs.createWriteStream( outputFile )
   outputStream.pipe( targetStream )
+  
+  await streamComplete(outputStream)
 }
 
 function showError(message, showHelp) {
