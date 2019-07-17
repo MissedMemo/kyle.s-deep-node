@@ -6,6 +6,7 @@ const fs = require('fs')
 const util = require('util')
 const { Transform } = require('stream')
 const zlib = require("zlib")
+const caf = require('caf')
 
 const args = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "in", "out", "compress"],
@@ -20,6 +21,8 @@ const streamComplete = stream => {
   })
 }
 
+processData = caf(processData)
+
 const basePath = path.resolve( process.env.BASE_PATH || __dirname )
 
 let outputFile = path.join( basePath, "output.txt" )
@@ -28,11 +31,14 @@ if ( args.help ) {
   printHelp()
 }
 else if (args.in || args._.includes('-')) {
-  processData( process.stdin ).catch( showError )
+  const tookTooLong = caf.timeout( 3, "Operation took too long!" )
+  processData( tookTooLong, process.stdin ).catch( showError )
 }
 else if ( args.file ) {
   const stream = fs.createReadStream( path.join( basePath, args.file ) )
-  processData( stream ).then( () => {
+  const tookTooLong = caf.timeout( 3, "Operation took too long!" )
+
+  processData( tookTooLong, stream ).then( () => {
     console.log('COMPLETE!')
   }).catch( showError )
 }
@@ -42,7 +48,7 @@ else {
 
 //************************************
 
-async function processData( inputStream ) {
+function *processData( signal, inputStream ) {
 
   let outputStream = inputStream
 
@@ -68,8 +74,13 @@ async function processData( inputStream ) {
 
   const targetStream = args.out ? process.stdout : fs.createWriteStream( outputFile )
   outputStream.pipe( targetStream )
+
+  signal.pr.catch( () => {
+    outputStream.unpipe( targetStream )
+    outputStream.destroy()
+  })
   
-  await streamComplete(outputStream)
+  yield streamComplete(outputStream)
 }
 
 function showError(message, showHelp) {
