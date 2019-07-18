@@ -5,16 +5,29 @@
 const { promisify } = require("util");
 const { join } = require("path");
 const { readFileSync } = require("fs");
-const sqlite3 = require("sqlite3");
+const { Database } = require("sqlite3");
 
 const DB_PATH = join( __dirname, "my.db" );
 const SCHEMA_PATH = join( __dirname, "mydb.sql" );
+const myDB = new Database(DB_PATH)
 
 const args = require("minimist")(process.argv.slice(2),{
 	string: ["other",],
 });
 
-let SQL3;
+const SQL3 = {
+  run(...args) {                         // insert, update, or delete record
+    return new Promise(function c(resolve,reject){
+      myDB.run(...args,function onResult(err){
+        if (err) reject(err);
+        else resolve(this);
+      });
+    });
+  },
+  get: promisify(myDB.get.bind(myDB)),   // get one record
+  all: promisify(myDB.all.bind(myDB)),   // get multiple records
+  exec: promisify(myDB.exec.bind(myDB)),
+}
 
 main().catch(console.error);
 
@@ -24,24 +37,8 @@ async function main() {
 		error("Missing '--other=..'");
 		return;
 	}
-
-	// define some SQLite3 database helpers
-	var myDB = new sqlite3.Database(DB_PATH);
-	SQL3 = {
-		run(...args) {                             // insert, update, or delete record
-			return new Promise(function c(resolve,reject){
-				myDB.run(...args,function onResult(err){
-					if (err) reject(err);
-					else resolve(this);
-				});
-			});
-		},
-		get: promisify(myDB.get.bind(myDB)),   // get one record
-		all: promisify(myDB.all.bind(myDB)),   // get multiple records
-		exec: promisify(myDB.exec.bind(myDB)),
-	};
-
-	var initSQL = readFileSync(SCHEMA_PATH,"utf-8");
+  
+	var initSQL = readFileSync( SCHEMA_PATH, "utf-8" )
 	await SQL3.exec(initSQL)
 
 	var other = args.other;
