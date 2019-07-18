@@ -55,12 +55,31 @@ async function main() {
     let result = await insertSomething( otherId, something )
 
     if ( result ) {
-      console.log('success!')
-      return
+      const records = await getAllRecords()
+      if ( records && records.length ) {
+        console.table(records)
+        return
+      }
     }
   }
 
 	error("Oops!");
+}
+
+async function getAllRecords() {
+
+  let records = await SQL3.all(`
+    SELECT
+      Other.data as "other",
+      Something.data as "something"
+    FROM
+      Something JOIN Other
+      ON (Something.OtherID = Other.id )
+    ORDER BY
+      Other.id DESC, Something.data
+  `)
+
+  return records
 }
 
 async function insertSomething( otherId, something ) {
