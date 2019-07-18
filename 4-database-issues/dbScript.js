@@ -29,7 +29,7 @@ async function main() {
 	// define some SQLite3 database helpers
 	var myDB = new sqlite3.Database(DB_PATH);
 	SQL3 = {
-		run(...args) {
+		run(...args) {                             // insert, update, or delete record
 			return new Promise(function c(resolve,reject){
 				myDB.run(...args,function onResult(err){
 					if (err) reject(err);
@@ -37,8 +37,8 @@ async function main() {
 				});
 			});
 		},
-		get: util.promisify(myDB.get.bind(myDB)),
-		all: util.promisify(myDB.all.bind(myDB)),
+		get: util.promisify(myDB.get.bind(myDB)),   // get one record
+		all: util.promisify(myDB.all.bind(myDB)),   // get multiple records
 		exec: util.promisify(myDB.exec.bind(myDB)),
 	};
 
@@ -49,11 +49,41 @@ async function main() {
 	var other = args.other;
 	var something = Math.trunc(Math.random() * 1E9);
 
-	// ***********
-
-	// TODO: insert values and print all records
+  const otherId = await insertOrLookupOther( other )
+  
+  if (otherId) {
+    // TODO...
+    return
+  }
 
 	error("Oops!");
+}
+
+async function insertOrLookupOther( other ) {
+  let result = await SQL3.get(`
+    SELECT
+      id
+    FROM
+      Other
+    WHERE
+      data = ?
+  `, other )
+
+  if ( result && result.id ) {
+    return result.id
+  }
+  else { // insert
+    result = await SQL3.run(`
+      INSERT INTO
+        Other (data)
+      VALUES
+        (?)
+    `, other )
+
+    if ( result && result.lastID ) {
+      return result.lastID
+    }
+  }
 }
 
 function error(err) {
