@@ -2,9 +2,9 @@
 
 "use strict";
 
-const util = require("util");
+const { promisify } = require("util");
 const { join } = require("path");
-const fs = require("fs");
+const { readFileSync } = require("fs");
 const sqlite3 = require("sqlite3");
 
 const DB_PATH = join( __dirname, "my.db" );
@@ -36,14 +36,13 @@ async function main() {
 				});
 			});
 		},
-		get: util.promisify(myDB.get.bind(myDB)),   // get one record
-		all: util.promisify(myDB.all.bind(myDB)),   // get multiple records
-		exec: util.promisify(myDB.exec.bind(myDB)),
+		get: promisify(myDB.get.bind(myDB)),   // get one record
+		all: promisify(myDB.all.bind(myDB)),   // get multiple records
+		exec: promisify(myDB.exec.bind(myDB)),
 	};
 
-	var initSQL = fs.readFileSync(SCHEMA_PATH,"utf-8");
+	var initSQL = readFileSync(SCHEMA_PATH,"utf-8");
 	await SQL3.exec(initSQL)
-
 
 	var other = args.other;
 	var something = Math.trunc(Math.random() * 1E9);
