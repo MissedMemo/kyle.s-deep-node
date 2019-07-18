@@ -2,31 +2,25 @@
 
 "use strict";
 
-var util = require("util");
-var path = require("path");
-var fs = require("fs");
+const util = require("util");
+const { join } = require("path");
+const fs = require("fs");
+const sqlite3 = require("sqlite3");
 
-var sqlite3 = require("sqlite3");
-// require("console.table");
+const DB_PATH = join( __dirname, "my.db" );
+const SCHEMA_PATH = join( __dirname, "mydb.sql" );
 
-
-// ************************************
-
-const DB_PATH = path.join(__dirname,"my.db");
-const DB_SQL_PATH = path.join(__dirname,"mydb.sql");
-
-var args = require("minimist")(process.argv.slice(2),{
+const args = require("minimist")(process.argv.slice(2),{
 	string: ["other",],
 });
 
 main().catch(console.error);
 
 
-// ************************************
-
-var SQL3;
+let SQL3;
 
 async function main() {
+
 	if (!args.other) {
 		error("Missing '--other=..'");
 		return;
@@ -48,8 +42,8 @@ async function main() {
 		exec: util.promisify(myDB.exec.bind(myDB)),
 	};
 
-	var initSQL = fs.readFileSync(DB_SQL_PATH,"utf-8");
-	// TODO: initialize the DB structure
+	var initSQL = fs.readFileSync(SCHEMA_PATH,"utf-8");
+	await SQL3.exec(initSQL)
 
 
 	var other = args.other;
