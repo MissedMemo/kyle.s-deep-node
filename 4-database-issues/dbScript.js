@@ -14,10 +14,9 @@ const args = require("minimist")(process.argv.slice(2),{
 	string: ["other",],
 });
 
-main().catch(console.error);
-
-
 let SQL3;
+
+main().catch(console.error);
 
 async function main() {
 
@@ -52,11 +51,28 @@ async function main() {
   const otherId = await insertOrLookupOther( other )
   
   if (otherId) {
-    // TODO...
-    return
+    
+    let result = await insertSomething( otherId, something )
+
+    if ( result ) {
+      console.log('success!')
+      return
+    }
   }
 
 	error("Oops!");
+}
+
+async function insertSomething( otherId, something ) {
+  
+  let result = await SQL3.run(`
+    INSERT INTO
+      Something (otherID, data)
+    VALUES
+      (?,?)
+  `, otherId, something )
+
+  return result && result.changes > 0
 }
 
 async function insertOrLookupOther( other ) {
